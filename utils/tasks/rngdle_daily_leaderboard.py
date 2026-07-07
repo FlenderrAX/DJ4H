@@ -6,7 +6,11 @@ from discord.ext import tasks
 
 from config import LOGGER
 from utils import get_or_fetch_user
-from utils.database.dao.rngdle import RNGdleDao, RNGdleGuildConfigDao, get_yesterday_range
+from utils.database.dao.rngdle import (
+    RNGdleDao,
+    RNGdleGuildConfigDao,
+    get_yesterday_range,
+)
 from utils.image_generator import LeaderboardGenerator, RNGdleLeaderboardUser
 from utils.number_utils import format_number
 
@@ -48,7 +52,7 @@ async def rngdle_daily_leaderboard_task(bot: discord.Bot) -> None:
             u = RNGdleLeaderboardUser()
             u.user = user
             u.score = format_number(score.score)
-            u.tirage = f"{score.number:,}"
+            u.tirage = f"{score.number:,}".replace(",", " ")
             u.rank = rank + 1
             leaderboard_users.append(u)
 
@@ -60,9 +64,7 @@ async def rngdle_daily_leaderboard_task(bot: discord.Bot) -> None:
 
         top_score = scores[0].score
         top_users = [
-            users[i]
-            for i, score in enumerate(scores)
-            if score.score == top_score
+            users[i] for i, score in enumerate(scores) if score.score == top_score
         ]
         mentions = " ".join(u.mention for u in top_users)
 

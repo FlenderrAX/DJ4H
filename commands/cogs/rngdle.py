@@ -65,9 +65,7 @@ class RNGdle(commands.Cog):
         )
         await ctx.respond(embed=message)
 
-    @rngdle_admin.command(
-        description="Set the channel for daily RNGDLE leaderboard"
-    )
+    @rngdle_admin.command(description="Set the channel for daily RNGDLE leaderboard")
     @discord.default_permissions(administrator=True)
     async def setleaderboard(
         self,
@@ -80,9 +78,7 @@ class RNGdle(commands.Cog):
             await ctx.respond("This command can only be used in a server!")
             return
 
-        await RNGdleGuildConfigDao.set_leaderboard_channel(
-            ctx.guild.id, channel.id
-        )
+        await RNGdleGuildConfigDao.set_leaderboard_channel(ctx.guild.id, channel.id)
         message = discord.Embed(
             title="RNGdle Leaderboard Channel",
             color=discord.Colour(MAGIC_COLOR),
@@ -90,7 +86,9 @@ class RNGdle(commands.Cog):
         )
         await ctx.respond(embed=message)
 
-    @rngdle_admin.command(description="Manually refresh RNGdle scores for all registered users")
+    @rngdle_admin.command(
+        description="Manually refresh RNGdle scores for all registered users"
+    )
     @discord.default_permissions(administrator=True)
     async def refresh(self, ctx: discord.ApplicationContext) -> None:
         """Manually refresh RNGdle scores without waiting for the hourly task."""
@@ -122,9 +120,7 @@ class RNGdle(commands.Cog):
         await ctx.respond(embed=message)
 
     @rng_group.command(description="Show RNGDLE leaderboard")
-    async def leaderboard(
-        self, ctx: discord.ApplicationContext
-    ) -> None:
+    async def leaderboard(self, ctx: discord.ApplicationContext) -> None:
         """Show RNGDLE leaderboard."""
         await ctx.defer()
         if ctx.guild is None:
@@ -144,7 +140,7 @@ class RNGdle(commands.Cog):
             u = RNGdleLeaderboardUser()
             u.user = user
             u.score = format_number(score.score)
-            u.tirage = f"{score.number:,}"
+            u.tirage = f"{score.number:,}".replace(",", " ")
             u.rank = len(users) + 1
             users.append(u)
 
