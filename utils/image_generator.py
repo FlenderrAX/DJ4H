@@ -438,7 +438,7 @@ class ProfileGenerator:
     def __init__(self):
         self.base_path: pathlib.Path = pathlib.Path(__file__).parent.resolve() / ".." / "ressources"
         self._load_fonts()
-        self._load_images() 
+        self._load_images()
 
     def _load_fonts(self):
         font_file = self.base_path / "font" / "outfit.ttf"
