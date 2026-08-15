@@ -200,20 +200,12 @@ TIER_TO_COLOR = {
 }
 
 
-<<<<<<< HEAD
-def get_score_tier_from_table(score: int):
-    if score not in SCORE_TO_PERCENT:
-        LOGGER.warning(f"RNGdle: unexpected score {score} (not in table).")
-        # Enable if you prefer to not consider unknown scores
-        # return Tier.ERROR
-=======
 def get_score_tier_from_compressed_table(score: int):
     if score < 0:
         LOGGER.warning(f"RNGdle: unexpected negative score ({score}).")
         return Tier.ERROR
 
     percent = get_score_percent(score)
->>>>>>> upstream/master
 
     if 0 <= percent < 1:
         tier = Tier.TRASH
