@@ -45,7 +45,7 @@ class LeaderboardPaginator(discord.ui.View):
     def update_buttons(self):
         max_pages = max(1, (len(self.users_data) + self.per_page - 1) // self.per_page)
         self.prev_btn.disabled = self.current_page == 0
-        self.next_btn.disabled = self.current_page >= max_pages - 1
+        self.next_btn.disabled = self.current_page + 1 >= max_pages
         self.page_btn.label = f"Page {self.current_page + 1} / {max_pages}"
 
     async def prev_callback(self, interaction: discord.Interaction):
