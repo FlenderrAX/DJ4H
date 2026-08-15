@@ -25,9 +25,11 @@ class LeaderboardPaginator(discord.ui.View):
         self.users_data = users_data
         self.generator = generator
         self.caller_index = caller_index
-        self.current_page = current_page
         self.per_page = per_page
         self.is_ephemeral = is_ephemeral
+        
+        self.max_pages = max(1, (len(self.users_data) + self.per_page - 1) // self.per_page)
+        self.current_page = max(0, min(current_page, self.max_pages - 1))
 
         self.prev_btn = discord.ui.Button(label="◀ Précédent", style=discord.ButtonStyle.primary)
         self.prev_btn.callback = self.prev_callback
@@ -43,19 +45,12 @@ class LeaderboardPaginator(discord.ui.View):
         self.update_buttons()
 
     def update_buttons(self):
-        max_pages = max(1, (len(self.users_data) + self.per_page - 1) // self.per_page)
         self.prev_btn.disabled = self.current_page == 0
-        self.next_btn.disabled = self.current_page >= max_pages - 1
-        self.page_btn.label = f"Page {self.current_page + 1} / {max_pages}"
+        self.next_btn.disabled = self.current_page + 1 >= self.max_pages
+        self.page_btn.label = f"Page {self.current_page + 1} / {self.max_pages}"
 
-    async def prev_callback(self, interaction: discord.Interaction):
-        await self._handle_pagination(interaction, self.current_page - 1)
-
-    async def next_callback(self, interaction: discord.Interaction):
-        await self._handle_pagination(interaction, self.current_page + 1)
-
-    async def _handle_pagination(self, interaction: discord.Interaction, target_page: int):
-        start_idx = target_page * self.per_page
+    async def get_page_content(self) -> discord.File:
+        start_idx = self.current_page * self.per_page
         end_idx = start_idx + self.per_page
         slice_data = self.users_data[start_idx:end_idx]
 
@@ -66,25 +61,40 @@ class LeaderboardPaginator(discord.ui.View):
                 "data": self.users_data[self.caller_index]
             }
 
-        img = await self.generator.generate_leaderboard(slice_data, start_rank=start_idx+1, caller_info=caller_info)
+        img = await self.generator.generate_leaderboard(
+            slice_data, 
+            start_rank=start_idx + 1, 
+            caller_info=caller_info
+        )
+        
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         buffer.seek(0)
-        file = discord.File(buffer, filename=f"leaderboard_all_p{target_page}.png")
+        return discord.File(fp=buffer, filename=f"leaderboard_all_p{self.current_page}.png")
 
+    async def prev_callback(self, interaction: discord.Interaction):
+        await self._handle_pagination(interaction, self.current_page - 1)
+
+    async def next_callback(self, interaction: discord.Interaction):
+        await self._handle_pagination(interaction, self.current_page + 1)
+
+    async def _handle_pagination(self, interaction: discord.Interaction, target_page: int):
+        self.current_page = target_page
+        
         if self.is_ephemeral:
-            self.current_page = target_page
             self.update_buttons()
+            file = await self.get_page_content()
             await interaction.response.edit_message(file=file, view=self)
         else:
             new_view = LeaderboardPaginator(
                 self.users_data, 
                 self.generator, 
                 caller_index=self.caller_index,
-                current_page=target_page, 
+                current_page=self.current_page, 
                 per_page=self.per_page, 
                 is_ephemeral=True
             )
+            file = await new_view.get_page_content()
             await interaction.response.send_message(file=file, view=new_view, ephemeral=True)
 
 class RNGdle(commands.Cog):
@@ -99,17 +109,6 @@ class RNGdle(commands.Cog):
     rng_group = SlashCommandGroup(name="rngdle", description="RNGDLE commands")
 
     rngdle_admin = SlashCommandGroup(name="rngdle-admin", description="RNGDLE admin commands")
-
-    def get_score_tier(self, score: int) -> str:
-        if score < 0: return "ERROR"
-        elif score < 2098: return "TRASH"
-        elif score < 5349: return "COMMON"
-        elif score < 8642: return "UNCOMMON"
-        elif score < 20245: return "RARE"
-        elif score < 33971: return "EPIC"
-        elif score < 150679: return "ANOMALY"
-        elif score <= 181186584: return "MYTHIC"
-        else: return "ERROR"
 
     @rngdle_admin.command(description="Register/Update an RNGDLE user")
     @discord.default_permissions(administrator=True)
@@ -500,31 +499,17 @@ class RNGdle(commands.Cog):
                 "rngdle_username": rngdle_username,
                 "total_score": total_score
             })
-
-        per_page = 10
-        max_pages = max(1, (len(users_data) + per_page - 1) // per_page)
+            
+        view = LeaderboardPaginator(
+            users_data=users_data, 
+            generator=self.overall_leaderboard_generator, 
+            caller_index=caller_index, 
+            current_page=page - 1, 
+            per_page=10, 
+            is_ephemeral=False
+        )
         
-        target_page = min(page, max_pages) - 1
-
-        start_idx = target_page * per_page
-        end_idx = start_idx + per_page
-        slice_data = users_data[start_idx:end_idx]
-
-        caller_info = None
-        if caller_index is not None and not (start_idx <= caller_index < end_idx):
-            caller_info = {
-                "rank": caller_index + 1,
-                "data": users_data[caller_index]
-            }
-
-        img = await self.overall_leaderboard_generator.generate_leaderboard(slice_data, start_rank=start_idx+1, caller_info=caller_info)
-
-        buffer = BytesIO()
-        img.save(buffer, format="PNG")
-        buffer.seek(0)
-        file = discord.File(fp=buffer, filename=f"leaderboard_all_p{target_page}.png")
-
-        view = LeaderboardPaginator(users_data, self.overall_leaderboard_generator, caller_index=caller_index, current_page=target_page, per_page=per_page, is_ephemeral=False)
+        file = await view.get_page_content()
         await ctx.respond(file=file, view=view)
 
 def setup(bot):
