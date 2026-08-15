@@ -663,17 +663,6 @@ class ServerStatGenerator:
             self.font_small = ImageFont.load_default()
             self.font_tiny = ImageFont.load_default()
 
-    def get_tier_info(self, score: int) -> tuple[str, tuple]:
-        if score < 0: return "ERROR", (255, 41, 41)
-        elif score < 2098: return "TRASH", (229, 126, 98)
-        elif score < 5349: return "COMMON", (229, 231, 235)
-        elif score < 8642: return "UNCOMMON", (94, 233, 181)
-        elif score < 20245: return "RARE", (142, 197, 255)
-        elif score < 33971: return "EPIC", (218, 178, 255)
-        elif score < 150679: return "ANOMALY", (255, 137, 4)
-        elif score <= 181186584: return "MYTHIC", (253, 165, 213)
-        else: return "ERROR", (255, 41, 41)
-
     async def generate_server_stat(self, guild: discord.Guild, stats: dict):
         img = Image.new("RGB", (self.WIDTH, self.HEIGHT), self.BG_COLOR)
         draw = ImageDraw.Draw(img)
@@ -782,18 +771,6 @@ class ServerStatGenerator:
                 self.create_avatar_mask(tier_avatars[tier], 24, int(x_pos + 235), int(y_pos - 1), img)
 
         return img
-
-    def get_tier_info_by_name(self, name: str) -> tuple:
-        colors = {
-            "TRASH": (229, 126, 98),
-            "COMMON": (229, 231, 235),
-            "UNCOMMON": (94, 233, 181),
-            "RARE": (142, 197, 255),
-            "EPIC": (218, 178, 255),
-            "ANOMALY": (255, 137, 4),
-            "MYTHIC": (253, 165, 213)
-        }
-        return colors.get(name, (255, 255, 255))
 
     @staticmethod
     def create_avatar_mask(avatar_img, avatar_size, avatar_x, avatar_y, img):
