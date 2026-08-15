@@ -165,6 +165,7 @@ class Tier(Enum):
     MYTHIC = 7
     ERROR = 8
 
+
 # From dark theme
 # TIER_TO_COLOR = {
 #     Tier.TRASH: (255, 210, 48), # dark

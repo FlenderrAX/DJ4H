@@ -15,19 +15,28 @@ from utils.image_generator import (
     RNGdleLeaderboardUser,
     ProfileGenerator,
     ServerStatGenerator,
-    OverallLeaderboardGenerator
+    OverallLeaderboardGenerator,
 )
 from utils.rngdle import RNGdle as RNGdleAPI
 
+
 class LeaderboardPaginator(discord.ui.View):
-    def __init__(self, users_data, generator, caller_index=None, current_page=0, per_page=10, is_ephemeral=False):
+    def __init__(
+        self,
+        users_data,
+        generator,
+        caller_index=None,
+        current_page=0,
+        per_page=10,
+        is_ephemeral=False,
+    ):
         super().__init__(timeout=180)
         self.users_data = users_data
         self.generator = generator
         self.caller_index = caller_index
         self.per_page = per_page
         self.is_ephemeral = is_ephemeral
-        
+
         self.max_pages = max(1, (len(self.users_data) + self.per_page - 1) // self.per_page)
         self.current_page = max(0, min(current_page, self.max_pages - 1))
 
@@ -58,15 +67,13 @@ class LeaderboardPaginator(discord.ui.View):
         if self.caller_index is not None and not (start_idx <= self.caller_index < end_idx):
             caller_info = {
                 "rank": self.caller_index + 1,
-                "data": self.users_data[self.caller_index]
+                "data": self.users_data[self.caller_index],
             }
 
         img = await self.generator.generate_leaderboard(
-            slice_data, 
-            start_rank=start_idx + 1, 
-            caller_info=caller_info
+            slice_data, start_rank=start_idx + 1, caller_info=caller_info
         )
-        
+
         buffer = BytesIO()
         img.save(buffer, format="PNG")
         buffer.seek(0)
@@ -80,22 +87,23 @@ class LeaderboardPaginator(discord.ui.View):
 
     async def _handle_pagination(self, interaction: discord.Interaction, target_page: int):
         self.current_page = target_page
-        
+
         if self.is_ephemeral:
             self.update_buttons()
             file = await self.get_page_content()
             await interaction.response.edit_message(file=file, view=self)
         else:
             new_view = LeaderboardPaginator(
-                self.users_data, 
-                self.generator, 
+                self.users_data,
+                self.generator,
                 caller_index=self.caller_index,
-                current_page=self.current_page, 
-                per_page=self.per_page, 
-                is_ephemeral=True
+                current_page=self.current_page,
+                per_page=self.per_page,
+                is_ephemeral=True,
             )
             file = await new_view.get_page_content()
             await interaction.response.send_message(file=file, view=new_view, ephemeral=True)
+
 
 class RNGdle(commands.Cog):
     def __init__(self, bot: discord.Bot):
@@ -209,7 +217,7 @@ class RNGdle(commands.Cog):
         if ctx.guild is None:
             await ctx.respond("This command can only be used in a server!")
             return
-            
+
         await rngdle_fetch_with_cooldown()
 
         scores = await RNGdleDao.get_today_scores(ctx.guild.id)
@@ -321,12 +329,12 @@ class RNGdle(commands.Cog):
                 highest_score = score
                 highest_date = rolled_date
                 lucky_number = num
-                
+
             if badges > max_badges:
                 max_badges = badges
 
         avg_score = int(total_score_sum / total_rolls) if total_rolls > 0 else 0
-        
+
         rank = await RNGdleDao.get_server_rank_by_total(target_id, ctx.guild.id)
         total_players = len(registered_users) if registered_users else 0
 
@@ -339,7 +347,7 @@ class RNGdle(commands.Cog):
             "lucky_seed": lucky_number,
             "max_badges": max_badges,
             "server_rank": rank,
-            "total_players": total_players
+            "total_players": total_players,
         }
 
         img = await self.profile_generator.generate_profile(member, rngdle_username, stats_dict)
@@ -376,11 +384,16 @@ class RNGdle(commands.Cog):
         total_rolls = len(rolls)
         overall_score = 0
         best_roll = {"score": -1, "user": "", "number": 0, "user_id": None}
-        worst_roll = {"score": float('inf'), "user": "", "number": 0, "user_id": None}
-        
+        worst_roll = {"score": float("inf"), "user": "", "number": 0, "user_id": None}
+
         rarity_counts = {
-            "TRASH": 0, "COMMON": 0, "UNCOMMON": 0, 
-            "RARE": 0, "EPIC": 0, "ANOMALY": 0, "MYTHIC": 0
+            "TRASH": 0,
+            "COMMON": 0,
+            "UNCOMMON": 0,
+            "RARE": 0,
+            "EPIC": 0,
+            "ANOMALY": 0,
+            "MYTHIC": 0,
         }
 
         user_rarity_counts = {}
@@ -392,12 +405,17 @@ class RNGdle(commands.Cog):
             username = user_map.get(user_id, "Unknown")
 
             overall_score += score
-            
+
             if score > best_roll["score"]:
                 best_roll = {"score": score, "user": username, "number": number, "user_id": user_id}
-                
+
             if score < worst_roll["score"]:
-                worst_roll = {"score": score, "user": username, "number": number, "user_id": user_id}
+                worst_roll = {
+                    "score": score,
+                    "user": username,
+                    "number": number,
+                    "user_id": user_id,
+                }
 
             tier = self.get_score_tier(score)
             if tier in rarity_counts:
@@ -406,8 +424,13 @@ class RNGdle(commands.Cog):
             if user_id:
                 if user_id not in user_rarity_counts:
                     user_rarity_counts[user_id] = {
-                        "TRASH": 0, "COMMON": 0, "UNCOMMON": 0, 
-                        "RARE": 0, "EPIC": 0, "ANOMALY": 0, "MYTHIC": 0
+                        "TRASH": 0,
+                        "COMMON": 0,
+                        "UNCOMMON": 0,
+                        "RARE": 0,
+                        "EPIC": 0,
+                        "ANOMALY": 0,
+                        "MYTHIC": 0,
                     }
                 if tier in user_rarity_counts[user_id]:
                     user_rarity_counts[user_id][tier] += 1
@@ -419,7 +442,7 @@ class RNGdle(commands.Cog):
             "RARE": {"id": None, "max": 0},
             "EPIC": {"id": None, "max": 0},
             "ANOMALY": {"id": None, "max": 0},
-            "MYTHIC": {"id": None, "max": 0}
+            "MYTHIC": {"id": None, "max": 0},
         }
 
         for uid, counts in user_rarity_counts.items():
@@ -452,7 +475,7 @@ class RNGdle(commands.Cog):
             "best_roll": best_roll,
             "worst_roll": worst_roll,
             "rarities": rarity_counts,
-            "tier_members": tier_members
+            "tier_members": tier_members,
         }
 
         img = await self.server_stat_generator.generate_server_stat(ctx.guild, stats_dict)
@@ -464,15 +487,21 @@ class RNGdle(commands.Cog):
 
         await ctx.respond(file=file)
 
-    @rng_group.command(name="leaderboard-all", description="Show the overall RNGdle leaderboard for the server.")
-    async def leaderboard_all(self, ctx: discord.ApplicationContext, page: discord.Option(int, "Page number", min_value=1, default=1)):
+    @rng_group.command(
+        name="leaderboard-all", description="Show the overall RNGdle leaderboard for the server."
+    )
+    async def leaderboard_all(
+        self,
+        ctx: discord.ApplicationContext,
+        page: discord.Option(int, "Page number", min_value=1, default=1),
+    ):
         await ctx.defer()
         if ctx.guild is None:
             await ctx.respond("This command can only be used in a server!")
             return
 
         leaderboard_rows = await RNGdleDao.get_overall_leaderboard(ctx.guild.id)
-        
+
         if not leaderboard_rows:
             await ctx.respond("Aucun score enregistré sur ce serveur.", ephemeral=True)
             return
@@ -494,23 +523,26 @@ class RNGdle(commands.Cog):
             member = ctx.guild.get_member(user_id) or await get_or_fetch_user(self.bot, user_id)
             rngdle_username = reg_map.get(user_id, "Unknown")
 
-            users_data.append({
-                "discord_user": member,
-                "rngdle_username": rngdle_username,
-                "total_score": total_score
-            })
+            users_data.append(
+                {
+                    "discord_user": member,
+                    "rngdle_username": rngdle_username,
+                    "total_score": total_score,
+                }
+            )
 
         view = LeaderboardPaginator(
-            users_data=users_data, 
-            generator=self.overall_leaderboard_generator, 
-            caller_index=caller_index, 
-            current_page=page - 1, 
-            per_page=10, 
-            is_ephemeral=False
+            users_data=users_data,
+            generator=self.overall_leaderboard_generator,
+            caller_index=caller_index,
+            current_page=page - 1,
+            per_page=10,
+            is_ephemeral=False,
         )
-        
+
         file = await view.get_page_content()
         await ctx.respond(file=file, view=view)
+
 
 def setup(bot):
     bot.add_cog(RNGdle(bot))

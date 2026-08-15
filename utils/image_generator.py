@@ -89,13 +89,13 @@ class LeaderboardGenerator:
     HEADER_HEIGHT: int = 100
 
     # Slightly lighter header background
-    BG_COLOR: ColorType = (25, 25, 25) # Dark background
-    TEXT_COLOR: ColorType = (255, 255, 255) # White text
-    
+    BG_COLOR: ColorType = (25, 25, 25)  # Dark background
+    TEXT_COLOR: ColorType = (255, 255, 255)  # White text
+
     HEADER_BG_COLOR: ColorType = (50, 50, 50)
-    ROW_EVEN_COLOR: ColorType = (35, 35, 35) # Even row background
-    ROW_ODD_COLOR: ColorType = (45, 45, 45) # Odd row background
-    HIGHLIGHT_COLOR: ColorType = (0, 100, 200) # For "async" button
+    ROW_EVEN_COLOR: ColorType = (35, 35, 35)  # Even row background
+    ROW_ODD_COLOR: ColorType = (45, 45, 45)  # Odd row background
+    HIGHLIGHT_COLOR: ColorType = (0, 100, 200)  # For "async" button
 
     def __init__(self):
         self.font_path: pathlib.Path | None = None
@@ -172,7 +172,7 @@ class LeaderboardGenerator:
             return base_font
         font = base_font
         font_path = getattr(font, "path", self.font_path)
-        font_size = getattr(font, "size", 30) # 30 is regular font size
+        font_size = getattr(font, "size", 30)  # 30 is regular font size
         while draw.textlength(text, font=font) > max_width and font_size > 1:
             font_size -= 1
             font = ImageFont.truetype(font_path, font_size)
@@ -204,7 +204,7 @@ class LeaderboardGenerator:
             return
         font = base_font
         font_path = getattr(font, "path", self.font_path)
-        font_size = getattr(font, "size", 30) # 30 is regular font size
+        font_size = getattr(font, "size", 30)  # 30 is regular font size
         while draw.textlength(text, font=font) > max_width and font_size > 1:
             font_size -= 1
             font = ImageFont.truetype(font_path, font_size)
@@ -265,7 +265,7 @@ class LeaderboardGenerator:
 
             anchor = "lt"
             if model == RNGdleLeaderboardUser and i >= 2:
-                 # Anchor to the right and fix the x position for the text
+                # Anchor to the right and fix the x position for the text
                 anchor = "rt"
                 x += model.column_max_widths[i - 2]
 
@@ -378,7 +378,7 @@ class LeaderboardGenerator:
                     draw_func = self._draw_fitted_align_right
                     user = typing.cast(RNGdleLeaderboardUser, user)
 
-                    if user.column_headers[col_idx] == "Tirage": # RNGdle draw
+                    if user.column_headers[col_idx] == "Tirage":  # RNGdle draw
                         # Left pad the number string to be at least 7 chars long for even rendering
                         col_text = f"{col_text:>7}"
                         font = self.font_mono_regular
@@ -632,17 +632,18 @@ class ProfileGenerator:
         avatar_img.putalpha(mask)
         img.paste(avatar_img, (avatar_x, avatar_y), avatar_img)
 
+
 class ServerStatGenerator:
     WIDTH: int = 800
-    HEIGHT: int = 710  
+    HEIGHT: int = 710
     HEADER_HEIGHT: int = 150
 
-    BG_COLOR = (25, 25, 25)           
-    TEXT_COLOR = (255, 255, 255)      
-    HEADER_BG_COLOR = (50, 50, 50)    
-    BOX_COLOR = (35, 35, 35)          
-    TITLE_COLOR = (200, 200, 200)     
-    SUBTEXT_COLOR = (170, 170, 170)   
+    BG_COLOR = (25, 25, 25)
+    TEXT_COLOR = (255, 255, 255)
+    HEADER_BG_COLOR = (50, 50, 50)
+    BOX_COLOR = (35, 35, 35)
+    TITLE_COLOR = (200, 200, 200)
+    SUBTEXT_COLOR = (170, 170, 170)
 
     def __init__(self):
         self.base_path = pathlib.Path(__file__).parent.resolve() / ".." / "ressources"
@@ -673,7 +674,9 @@ class ServerStatGenerator:
         try:
             if guild.icon:
                 icon_data = await guild.icon.read()
-                icon_img = Image.open(BytesIO(icon_data)).resize((icon_size, icon_size)).convert("RGBA")
+                icon_img = (
+                    Image.open(BytesIO(icon_data)).resize((icon_size, icon_size)).convert("RGBA")
+                )
             else:
                 raise Exception()
             self.create_avatar_mask(icon_img, icon_size, icon_x, icon_y, img)
@@ -692,57 +695,120 @@ class ServerStatGenerator:
                     pass
             return Image.new("RGBA", (size, size), (120, 120, 120, 255))
 
-        best_avatar = await fetch_avatar(stats['best_roll'].get('member'), 32)
-        worst_avatar = await fetch_avatar(stats['worst_roll'].get('member'), 32)
-        
+        best_avatar = await fetch_avatar(stats["best_roll"].get("member"), 32)
+        worst_avatar = await fetch_avatar(stats["worst_roll"].get("member"), 32)
+
         tier_avatars = {}
-        for t, member in stats.get('tier_members', {}).items():
+        for t, member in stats.get("tier_members", {}).items():
             if member:
                 tier_avatars[t] = await fetch_avatar(member, 24)
 
-        def draw_box(x, y, w, h, title, value, subtext=None, value_color=None, outline_color=None, score_suffix=None, avatar=None):
+        def draw_box(
+            x,
+            y,
+            w,
+            h,
+            title,
+            value,
+            subtext=None,
+            value_color=None,
+            outline_color=None,
+            score_suffix=None,
+            avatar=None,
+        ):
             if value_color is None:
                 value_color = self.TEXT_COLOR
-                
+
             if outline_color:
-                draw.rounded_rectangle([x, y, x + w, y + h], radius=12, fill=self.BOX_COLOR, outline=outline_color, width=2)
+                draw.rounded_rectangle(
+                    [x, y, x + w, y + h],
+                    radius=12,
+                    fill=self.BOX_COLOR,
+                    outline=outline_color,
+                    width=2,
+                )
             else:
                 draw.rounded_rectangle([x, y, x + w, y + h], radius=12, fill=self.BOX_COLOR)
-                
+
             draw.text((x + 20, y + 15), title, fill=self.TITLE_COLOR, font=self.font_small)
-            
+
             if avatar:
                 av_x = int(x + w - avatar.width - 15)
                 av_y = int(y + 10)
                 self.create_avatar_mask(avatar, avatar.width, av_x, av_y, img)
 
             draw.text((x + 20, y + 45), value, fill=value_color, font=self.font_regular)
-            
+
             if score_suffix:
                 val_width = draw.textlength(value + " ", font=self.font_regular)
-                draw.text((x + 20 + val_width, y + 45), score_suffix, fill=(215, 215, 215), font=self.font_regular)
-            
+                draw.text(
+                    (x + 20 + val_width, y + 45),
+                    score_suffix,
+                    fill=(215, 215, 215),
+                    font=self.font_regular,
+                )
+
             if subtext:
                 draw.text((x + 20, y + 80), subtext, fill=self.SUBTEXT_COLOR, font=self.font_tiny)
 
-        best_color = self.get_tier_info(stats['best_roll']['score'])[1]
-        worst_color = self.get_tier_info(stats['worst_roll']['score'])[1]
-        
+        best_color = self.get_tier_info(stats["best_roll"]["score"])[1]
+        worst_color = self.get_tier_info(stats["worst_roll"]["score"])[1]
+
         best_number_str = f"{stats['best_roll']['number']:,}".replace(",", " ")
         best_score_str = f"({stats['best_roll']['score']:,} EP)".replace(",", " ")
-        
+
         worst_number_str = f"{stats['worst_roll']['number']:,}".replace(",", " ")
         worst_score_str = f"({stats['worst_roll']['score']:,} EP)".replace(",", " ")
 
-        draw_box(40, 180, 345, 110, "Best Roll OAT", best_number_str, f"by {stats['best_roll']['user']}", value_color=best_color, outline_color=best_color, score_suffix=best_score_str, avatar=best_avatar)
-        draw_box(415, 180, 345, 110, "Worst Roll OAT", worst_number_str, f"by {stats['worst_roll']['user']}", value_color=worst_color, outline_color=worst_color, score_suffix=worst_score_str, avatar=worst_avatar)
+        draw_box(
+            40,
+            180,
+            345,
+            110,
+            "Best Roll OAT",
+            best_number_str,
+            f"by {stats['best_roll']['user']}",
+            value_color=best_color,
+            outline_color=best_color,
+            score_suffix=best_score_str,
+            avatar=best_avatar,
+        )
+        draw_box(
+            415,
+            180,
+            345,
+            110,
+            "Worst Roll OAT",
+            worst_number_str,
+            f"by {stats['worst_roll']['user']}",
+            value_color=worst_color,
+            outline_color=worst_color,
+            score_suffix=worst_score_str,
+            avatar=worst_avatar,
+        )
 
         box_w = 226
-        avg_color = self.get_tier_info(stats['avg_score'])[1]
-        
+        avg_color = self.get_tier_info(stats["avg_score"])[1]
+
         draw_box(40, 310, box_w, 110, "Total Rolls", f"{stats['total_rolls']:,}".replace(",", " "))
-        draw_box(286, 310, box_w, 110, "Average Score", f"{stats['avg_score']:,} EP".replace(",", " "), value_color=avg_color, outline_color=avg_color)
-        draw_box(532, 310, box_w, 110, "Overall Score", f"{stats['overall_score']:,} EP".replace(",", " "))
+        draw_box(
+            286,
+            310,
+            box_w,
+            110,
+            "Average Score",
+            f"{stats['avg_score']:,} EP".replace(",", " "),
+            value_color=avg_color,
+            outline_color=avg_color,
+        )
+        draw_box(
+            532,
+            310,
+            box_w,
+            110,
+            "Overall Score",
+            f"{stats['overall_score']:,} EP".replace(",", " "),
+        )
 
         draw.rounded_rectangle([40, 440, 760, 680], radius=12, fill=self.BOX_COLOR)
         draw.text((60, 455), "Tier Breakdown", fill=self.TITLE_COLOR, font=self.font_small)
@@ -750,25 +816,32 @@ class ServerStatGenerator:
         tiers = ["MYTHIC", "ANOMALY", "EPIC", "RARE", "UNCOMMON", "COMMON", "TRASH"]
         col_x = [80, 440]
         start_y = 500
-        
+
         for i, tier in enumerate(tiers):
-            count = stats['rarities'].get(tier, 0)
+            count = stats["rarities"].get(tier, 0)
             color = self.get_tier_info_by_name(tier)
-            
+
             col_index = 0 if i < 4 else 1
             row_index = i if i < 4 else i - 4
-            
+
             x_pos = col_x[col_index]
             y_pos = start_y + (45 * row_index)
-            
+
             draw.text((x_pos, y_pos), f"{tier}:", fill=color, font=self.font_small)
-            
+
             count_str = f"{count:,}".replace(",", " ")
             count_width = draw.textlength(count_str, font=self.font_small)
-            draw.text((x_pos + 220 - count_width, y_pos), count_str, fill=self.TEXT_COLOR, font=self.font_small)
+            draw.text(
+                (x_pos + 220 - count_width, y_pos),
+                count_str,
+                fill=self.TEXT_COLOR,
+                font=self.font_small,
+            )
 
             if tier in tier_avatars:
-                self.create_avatar_mask(tier_avatars[tier], 24, int(x_pos + 235), int(y_pos - 1), img)
+                self.create_avatar_mask(
+                    tier_avatars[tier], 24, int(x_pos + 235), int(y_pos - 1), img
+                )
 
         return img
 
@@ -780,6 +853,7 @@ class ServerStatGenerator:
         mask = mask.resize((avatar_size, avatar_size), Image.Resampling.LANCZOS)
         avatar_img.putalpha(mask)
         img.paste(avatar_img, (avatar_x, avatar_y), avatar_img)
+
 
 class OverallLeaderboardGenerator:
     WIDTH: int = 800
@@ -809,9 +883,15 @@ class OverallLeaderboardGenerator:
     def _load_images(self):
         try:
             img_dir = self.base_path / "images"
-            self.PODIUM_BRONZE = Image.open(str(img_dir / "medal_bronze.png")).convert("RGBA").resize((50, 50))
-            self.PODIUM_SILVER = Image.open(str(img_dir / "medal_silver.png")).convert("RGBA").resize((50, 50))
-            self.PODIUM_GOLD = Image.open(str(img_dir / "medal_gold.png")).convert("RGBA").resize((50, 50))
+            self.PODIUM_BRONZE = (
+                Image.open(str(img_dir / "medal_bronze.png")).convert("RGBA").resize((50, 50))
+            )
+            self.PODIUM_SILVER = (
+                Image.open(str(img_dir / "medal_silver.png")).convert("RGBA").resize((50, 50))
+            )
+            self.PODIUM_GOLD = (
+                Image.open(str(img_dir / "medal_gold.png")).convert("RGBA").resize((50, 50))
+            )
         except Exception:
             self.PODIUM_BRONZE = None
             self.PODIUM_SILVER = None
@@ -831,16 +911,26 @@ class OverallLeaderboardGenerator:
         else:
             return str(num)
 
-    def _draw_fitted(self, draw: ImageDraw.ImageDraw, text: str, x: float, y: float, max_width: float, base_font, fill, anchor="lt"):
+    def _draw_fitted(
+        self,
+        draw: ImageDraw.ImageDraw,
+        text: str,
+        x: float,
+        y: float,
+        max_width: float,
+        base_font,
+        fill,
+        anchor="lt",
+    ):
         font = base_font
         font_path = getattr(font, "path", None)
         font_size = getattr(font, "size", 30)
-        
+
         if font_path:
             while draw.textlength(text, font=font) > max_width and font_size > 1:
                 font_size -= 1
                 font = ImageFont.truetype(font_path, font_size)
-                
+
         draw.text((x, y), text, fill=fill, font=font, anchor=anchor)
 
     async def _draw_user_row(self, draw, img, data, rank, y_pos, row_color):
@@ -852,20 +942,30 @@ class OverallLeaderboardGenerator:
         if rank == 1 and self.PODIUM_GOLD:
             img.paste(self.PODIUM_GOLD, (rank_text_x - 15, int(rank_text_y - 10)), self.PODIUM_GOLD)
         elif rank == 2 and self.PODIUM_SILVER:
-            img.paste(self.PODIUM_SILVER, (rank_text_x - 15, int(rank_text_y - 10)), self.PODIUM_SILVER)
+            img.paste(
+                self.PODIUM_SILVER, (rank_text_x - 15, int(rank_text_y - 10)), self.PODIUM_SILVER
+            )
         elif rank == 3 and self.PODIUM_BRONZE:
-            img.paste(self.PODIUM_BRONZE, (rank_text_x - 15, int(rank_text_y - 10)), self.PODIUM_BRONZE)
+            img.paste(
+                self.PODIUM_BRONZE, (rank_text_x - 15, int(rank_text_y - 10)), self.PODIUM_BRONZE
+            )
         else:
-            draw.text((rank_text_x, rank_text_y), str(rank), fill=self.TEXT_COLOR, font=self.font_regular)
+            draw.text(
+                (rank_text_x, rank_text_y), str(rank), fill=self.TEXT_COLOR, font=self.font_regular
+            )
 
         avatar_x = 100
         avatar_y = y_pos + 15
         avatar_size = 60
-        
+
         try:
-            if data['discord_user']:
-                avatar_data = await data['discord_user'].display_avatar.read()
-                avatar_img = Image.open(BytesIO(avatar_data)).resize((avatar_size, avatar_size)).convert("RGBA")
+            if data["discord_user"]:
+                avatar_data = await data["discord_user"].display_avatar.read()
+                avatar_img = (
+                    Image.open(BytesIO(avatar_data))
+                    .resize((avatar_size, avatar_size))
+                    .convert("RGBA")
+                )
             else:
                 raise Exception()
             self.create_avatar_mask(avatar_img, avatar_size, avatar_x, avatar_y, img)
@@ -875,21 +975,29 @@ class OverallLeaderboardGenerator:
 
         username_x = 190
         username_y = y_pos + (self.ROW_HEIGHT / 2) - 15
-        display_name = data['discord_user'].name if data['discord_user'] else data['rngdle_username']
-        self._draw_fitted(draw, display_name, username_x, username_y, 320, self.font_regular, self.TEXT_COLOR)
+        display_name = (
+            data["discord_user"].name if data["discord_user"] else data["rngdle_username"]
+        )
+        self._draw_fitted(
+            draw, display_name, username_x, username_y, 320, self.font_regular, self.TEXT_COLOR
+        )
 
-        short_score = self.format_short_number(data['total_score'])
+        short_score = self.format_short_number(data["total_score"])
         score_str = f"{short_score} EP"
-        
+
         score_x = 770
         score_y = y_pos + (self.ROW_HEIGHT / 2) - 15
-        self._draw_fitted(draw, score_str, score_x, score_y, 250, self.font_regular, (251, 251, 251), anchor="rt")
+        self._draw_fitted(
+            draw, score_str, score_x, score_y, 250, self.font_regular, (251, 251, 251), anchor="rt"
+        )
 
-    async def generate_leaderboard(self, users_data: list[dict], start_rank: int = 1, caller_info: dict = None):
+    async def generate_leaderboard(
+        self, users_data: list[dict], start_rank: int = 1, caller_info: dict = None
+    ):
         GAP = 20
         base_rows = len(users_data)
         total_height = self.HEADER_HEIGHT + (base_rows * self.ROW_HEIGHT)
-        
+
         if caller_info:
             total_height += self.ROW_HEIGHT + GAP
 
@@ -904,7 +1012,9 @@ class OverallLeaderboardGenerator:
 
         for i, header in enumerate(headers):
             x, y = x_offsets[i], self.HEADER_HEIGHT / 2 - 15
-            draw.text((x, y), header, fill=self.TEXT_COLOR, font=self.font_regular, anchor=anchors[i])
+            draw.text(
+                (x, y), header, fill=self.TEXT_COLOR, font=self.font_regular, anchor=anchors[i]
+            )
 
         for index, data in enumerate(users_data):
             y_pos = self.HEADER_HEIGHT + (index * self.ROW_HEIGHT)
@@ -914,11 +1024,13 @@ class OverallLeaderboardGenerator:
         if caller_info:
             base_y = self.HEADER_HEIGHT + (base_rows * self.ROW_HEIGHT)
             line_y = base_y + (GAP // 2)
-            
+
             draw.line([(0, line_y), (self.WIDTH, line_y)], fill=(80, 80, 80), width=2)
-            
+
             caller_y = base_y + GAP
-            await self._draw_user_row(draw, img, caller_info['data'], caller_info['rank'], caller_y, self.ROW_EVEN_COLOR)
+            await self._draw_user_row(
+                draw, img, caller_info["data"], caller_info["rank"], caller_y, self.ROW_EVEN_COLOR
+            )
 
         return img
 
