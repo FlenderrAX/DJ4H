@@ -238,7 +238,7 @@ class RNGdle(commands.Cog):
         await ctx.respond(file=file)
 
     @rng_group.command(name="profile", description="Show a RNGdle user profile.")
-    async def profil(
+    async def profile(
         self,
         ctx: discord.ApplicationContext,
         user: discord.Option(
