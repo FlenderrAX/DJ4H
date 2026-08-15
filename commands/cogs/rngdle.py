@@ -237,7 +237,7 @@ class RNGdle(commands.Cog):
         await ctx.respond(file=file)
 
     @rng_group.command(name="profile", description="Show a RNGdle user profile.")
-    async def profil(
+    async def profile(
         self,
         ctx: discord.ApplicationContext,
         user: discord.Option(
@@ -499,7 +499,7 @@ class RNGdle(commands.Cog):
                 "rngdle_username": rngdle_username,
                 "total_score": total_score
             })
-            
+
         view = LeaderboardPaginator(
             users_data=users_data, 
             generator=self.overall_leaderboard_generator, 
