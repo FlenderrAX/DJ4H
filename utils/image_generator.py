@@ -500,21 +500,58 @@ class ProfileGenerator:
         draw.text((170, 35), username, fill=self.TEXT_COLOR, font=self.font_title)
 
         rank = stats.get("server_rank", 0)
+        total_players = stats.get("total_players", 0)
+
         if rank > 0:
+            total_str = f" / {total_players}"
+            total_width = draw.textlength(total_str, font=self.font_regular)
+
+            sub_y = 70
+            icon_y = 15
+
             if rank == 1 and self.PODIUM_GOLD:
-                img.paste(self.PODIUM_GOLD, (670, 30), self.PODIUM_GOLD)
+                img.paste(self.PODIUM_GOLD, (int(760 - total_width - 90), icon_y), self.PODIUM_GOLD)
+                draw.text(
+                    (760 - total_width, sub_y),
+                    total_str,
+                    fill=self.SUBTEXT_COLOR,
+                    font=self.font_regular,
+                )
             elif rank == 2 and self.PODIUM_SILVER:
-                img.paste(self.PODIUM_SILVER, (667, 30), self.PODIUM_SILVER)
+                img.paste(
+                    self.PODIUM_SILVER, (int(760 - total_width - 93), icon_y), self.PODIUM_SILVER
+                )
+                draw.text(
+                    (760 - total_width, sub_y),
+                    total_str,
+                    fill=self.SUBTEXT_COLOR,
+                    font=self.font_regular,
+                )
             elif rank == 3 and self.PODIUM_BRONZE:
-                img.paste(self.PODIUM_BRONZE, (667, 30), self.PODIUM_BRONZE)
+                img.paste(
+                    self.PODIUM_BRONZE, (int(760 - total_width - 93), icon_y), self.PODIUM_BRONZE
+                )
+                draw.text(
+                    (760 - total_width, sub_y),
+                    total_str,
+                    fill=self.SUBTEXT_COLOR,
+                    font=self.font_regular,
+                )
             else:
                 rank_str = f"#{rank}"
                 rank_width = draw.textlength(rank_str, font=self.font_rank)
+
                 draw.text(
-                    (760 - rank_width, 25),
+                    (760 - total_width - rank_width, 25),
                     rank_str,
                     fill=(150, 150, 150),
                     font=self.font_rank,
+                )
+                draw.text(
+                    (760 - total_width, sub_y),
+                    total_str,
+                    fill=self.SUBTEXT_COLOR,
+                    font=self.font_regular,
                 )
 
         best_roll_y = 180
@@ -751,8 +788,8 @@ class ServerStatGenerator:
             if subtext:
                 draw.text((x + 20, y + 80), subtext, fill=self.SUBTEXT_COLOR, font=self.font_tiny)
 
-        best_color = self.get_tier_info(stats["best_roll"]["score"])[1]
-        worst_color = self.get_tier_info(stats["worst_roll"]["score"])[1]
+        best_color = get_tier_color(get_score_tier(stats["best_roll"]["score"]))
+        worst_color = get_tier_color(get_score_tier(stats["worst_roll"]["score"]))
 
         best_number_str = f"{stats['best_roll']['number']:,}".replace(",", " ")
         best_score_str = f"({stats['best_roll']['score']:,} EP)".replace(",", " ")
@@ -788,7 +825,7 @@ class ServerStatGenerator:
         )
 
         box_w = 226
-        avg_color = self.get_tier_info(stats["avg_score"])[1]
+        avg_color = get_tier_color(get_score_tier(stats["avg_score"]))
 
         draw_box(40, 310, box_w, 110, "Total Rolls", f"{stats['total_rolls']:,}".replace(",", " "))
         draw_box(
@@ -819,7 +856,7 @@ class ServerStatGenerator:
 
         for i, tier in enumerate(tiers):
             count = stats["rarities"].get(tier, 0)
-            color = self.get_tier_info_by_name(tier)
+            color = get_tier_color(Tier[tier])
 
             col_index = 0 if i < 4 else 1
             row_index = i if i < 4 else i - 4

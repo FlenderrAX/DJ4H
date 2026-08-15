@@ -18,6 +18,7 @@ from utils.image_generator import (
     OverallLeaderboardGenerator,
 )
 from utils.rngdle import RNGdle as RNGdleAPI
+from utils.rngdle import get_score_tier
 
 
 class LeaderboardPaginator(discord.ui.View):
@@ -417,7 +418,7 @@ class RNGdle(commands.Cog):
                     "user_id": user_id,
                 }
 
-            tier = self.get_score_tier(score)
+            tier = get_score_tier(score).name
             if tier in rarity_counts:
                 rarity_counts[tier] += 1
 
