@@ -462,21 +462,17 @@ class RNGdle(commands.Cog):
                 if tier in user_rarity_counts[user_id]:
                     user_rarity_counts[user_id][tier] += 1
 
-        tier_kings = {
-            "TRASH": {"id": None, "max": 0},
-            "COMMON": {"id": None, "max": 0},
-            "UNCOMMON": {"id": None, "max": 0},
-            "RARE": {"id": None, "max": 0},
-            "EPIC": {"id": None, "max": 0},
-            "ANOMALY": {"id": None, "max": 0},
-            "MYTHIC": {"id": None, "max": 0},
-        }
+        tiers_list = ["TRASH", "COMMON", "UNCOMMON", "RARE", "EPIC", "ANOMALY", "MYTHIC"]
+        tier_kings = {t: [] for t in tiers_list}
 
-        for uid, counts in user_rarity_counts.items():
-            for t in tier_kings:
-                if counts[t] > tier_kings[t]["max"]:
-                    tier_kings[t]["max"] = counts[t]
-                    tier_kings[t]["id"] = uid
+        for tier in tiers_list:
+            tier_users = [
+                (uid, counts[tier])
+                for uid, counts in user_rarity_counts.items()
+                if counts[tier] > 0
+            ]
+            tier_users.sort(key=lambda x: x[1], reverse=True)
+            tier_kings[tier] = tier_users[:3]
 
         avg_score = int(overall_score / total_rolls) if total_rolls > 0 else 0
 
@@ -490,10 +486,12 @@ class RNGdle(commands.Cog):
             worst_member = await get_or_fetch_user(self.bot, int(worst_roll["user_id"]))
         worst_roll["member"] = worst_member
 
-        tier_members = {}
-        for t, king in tier_kings.items():
-            if king["id"]:
-                tier_members[t] = await get_or_fetch_user(self.bot, int(king["id"]))
+        tier_members = {t: [] for t in tiers_list}
+        for t, kings in tier_kings.items():
+            for uid, count in kings:
+                member = await get_or_fetch_user(self.bot, int(uid))
+                if member:
+                    tier_members[t].append(member)
 
         stats_dict = {
             "total_rolls": total_rolls,

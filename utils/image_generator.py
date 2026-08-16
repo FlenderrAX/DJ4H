@@ -772,9 +772,12 @@ class ServerStatGenerator:
         worst_avatar = await fetch_avatar(stats["worst_roll"].get("member"), 32)
 
         tier_avatars = {}
-        for t, member in stats.get("tier_members", {}).items():
-            if member:
-                tier_avatars[t] = await fetch_avatar(member, 24)
+        for t, members_list in stats.get("tier_members", {}).items():
+            tier_avatars[t] = []
+            for member in members_list:
+                if member:
+                    avatar = await fetch_avatar(member, 24)
+                    tier_avatars[t].append(avatar)
 
         def draw_box(
             x,
@@ -912,9 +915,23 @@ class ServerStatGenerator:
             )
 
             if tier in tier_avatars:
-                self.create_avatar_mask(
-                    tier_avatars[tier], 24, int(x_pos + 235), int(y_pos - 1), img
-                )
+                avatars_to_draw = tier_avatars[tier][:3]
+
+                # On dessine la liste à l'envers pour que le #1 (index 0) soit dessiné en dernier
+                # et apparaisse donc visuellement "par-dessus" les autres
+                for idx, avatar in reversed(list(enumerate(avatars_to_draw))):
+                    # Un écart de 14 pixels pour des images de 24px crée un chevauchement de 10px
+                    avatar_x = int(x_pos + 235 + (idx * 14))
+                    avatar_y = int(y_pos - 1)
+
+                    # On dessine un cercle gris foncé (BOX_COLOR) derrière l'avatar pour créer
+                    # une petite bordure qui "coupe" l'avatar en dessous et les détache proprement
+                    draw.ellipse(
+                        [avatar_x - 2, avatar_y - 2, avatar_x + 24 + 2, avatar_y + 24 + 2],
+                        fill=self.BOX_COLOR,
+                    )
+
+                    self.create_avatar_mask(avatar, 24, avatar_x, avatar_y, img)
 
         return img
 
