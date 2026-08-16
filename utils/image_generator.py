@@ -425,7 +425,7 @@ class LeaderboardGenerator:
 
 class ProfileGenerator:
     WIDTH: int = 800
-    HEIGHT: int = 610
+    HEIGHT: int = 840
     HEADER_HEIGHT: int = 150
 
     BG_COLOR: ColorType = (25, 25, 25)
@@ -554,60 +554,18 @@ class ProfileGenerator:
                     font=self.font_regular,
                 )
 
-        best_roll_y = 180
-        tier = get_score_tier(stats["highest_score"])
-        rarity_color = get_tier_color(tier)
-
-        draw.rounded_rectangle(
-            [40, best_roll_y, 760, best_roll_y + 130],
-            radius=15,
-            fill=self.BOX_COLOR,
-            outline=rarity_color,
-            width=2,
-        )
-
-        lucky_seed_str = f"{stats['lucky_seed']:,}".replace(",", " ")
-        score_str = f"({stats['highest_score']:,} EP)".replace(",", " ")
-
-        draw.text(
-            (65, best_roll_y + 15),
-            "BEST ROLL",
-            fill=rarity_color,
-            font=self.font_small,
-        )
-        draw.text(
-            (65, best_roll_y + 50),
-            lucky_seed_str,
-            fill=rarity_color,
-            font=self.font_large,
-        )
-
-        seed_width = draw.textlength(lucky_seed_str + " ", font=self.font_large)
-        draw.text(
-            (65 + seed_width, best_roll_y + 50),
-            score_str,
-            fill=(215, 215, 215),
-            font=self.font_large,
-        )
-
-        date_str = f"Date : {stats['highest_date']}"
-        date_width = draw.textlength(date_str, font=self.font_small)
-        draw.text(
-            (735 - date_width, best_roll_y + 60),
-            date_str,
-            fill=self.SUBTEXT_COLOR,
-            font=self.font_small,
-        )
-
-        def draw_stat_box(
+        def draw_box(
             x,
             y,
+            w,
+            h,
             title,
             value,
             subtext=None,
             value_font=None,
             outline_color=None,
             value_color=None,
+            score_suffix=None,
         ):
             if value_font is None:
                 value_font = self.font_regular
@@ -616,14 +574,14 @@ class ProfileGenerator:
 
             if outline_color:
                 draw.rounded_rectangle(
-                    [x, y, x + 350, y + 110],
+                    [x, y, x + w, y + h],
                     radius=12,
                     fill=self.BOX_COLOR,
                     outline=outline_color,
                     width=2,
                 )
             else:
-                draw.rounded_rectangle([x, y, x + 350, y + 110], radius=12, fill=self.BOX_COLOR)
+                draw.rounded_rectangle([x, y, x + w, y + h], radius=12, fill=self.BOX_COLOR)
 
             draw.text(
                 (x + 20, y + 15),
@@ -632,31 +590,109 @@ class ProfileGenerator:
                 font=self.font_small,
             )
             y_offset = 48 if value_font == self.font_small else 45
-            draw.text((x + 20, y + y_offset), value, fill=value_color, font=value_font)
+            draw.text((x + 20, y + y_offset), str(value), fill=value_color, font=value_font)
+
+            if score_suffix:
+                val_width = draw.textlength(str(value) + " ", font=value_font)
+                draw.text(
+                    (x + 20 + val_width, y + y_offset),
+                    score_suffix,
+                    fill=(215, 215, 215),
+                    font=self.font_regular,
+                )
+
             if subtext:
                 draw.text(
-                    (x + 20, y + 82),
+                    (x + 20, y + 80),
                     subtext,
                     fill=self.SUBTEXT_COLOR,
                     font=self.font_tiny,
                 )
+
+        best_roll_y = 180
+
+        best_tier = get_score_tier(stats["highest_score"])
+        best_color = get_tier_color(best_tier)
+        best_seed_str = f"{stats['lucky_seed']:,}".replace(",", " ")
+        best_score_str = f"({stats['highest_score']:,} EP)".replace(",", " ")
+
+        worst_tier = get_score_tier(stats["lowest_score"])
+        worst_color = get_tier_color(worst_tier)
+        worst_seed_str = f"{stats['unlucky_seed']:,}".replace(",", " ")
+        worst_score_str = f"({stats['lowest_score']:,} EP)".replace(",", " ")
+
+        draw_box(
+            40,
+            best_roll_y,
+            345,
+            110,
+            "Best Roll",
+            best_seed_str,
+            subtext=f"Date : {stats['highest_date']}",
+            value_color=best_color,
+            outline_color=best_color,
+            score_suffix=best_score_str,
+        )
+
+        draw_box(
+            415,
+            best_roll_y,
+            345,
+            110,
+            "Worst Roll",
+            worst_seed_str,
+            subtext=f"Date : {stats['lowest_date']}",
+            value_color=worst_color,
+            outline_color=worst_color,
+            score_suffix=worst_score_str,
+        )
 
         avg_score_str = f"{stats['avg_score']:,}".replace(",", " ") + " EP"
         overall_score_str = f"{stats['total_score_sum']:,}".replace(",", " ") + " EP"
         avg_tier = get_score_tier(stats["avg_score"])
         avg_color = get_tier_color(avg_tier)
 
-        draw_stat_box(40, 340, "Total Rolls", str(stats["total_rolls"]))
-        draw_stat_box(
-            410,
-            340,
+        draw_box(40, 310, 345, 110, "Total Rolls", str(stats["total_rolls"]))
+        draw_box(
+            415,
+            310,
+            345,
+            110,
             "Average Score",
             avg_score_str,
             outline_color=avg_color,
             value_color=avg_color,
         )
-        draw_stat_box(40, 470, "Max Badges", f"{stats['max_badges']} badges at once")
-        draw_stat_box(410, 470, "Overall Score", overall_score_str)
+        draw_box(40, 440, 345, 110, "Max Badges", f"{stats['max_badges']} badges at once")
+        draw_box(415, 440, 345, 110, "Overall Score", overall_score_str)
+
+        draw.rounded_rectangle([40, 570, 760, 810], radius=12, fill=self.BOX_COLOR)
+        draw.text((60, 585), "Tier Breakdown", fill=self.TITLE_COLOR, font=self.font_small)
+
+        tiers = ["MYTHIC", "ANOMALY", "EPIC", "RARE", "UNCOMMON", "COMMON", "TRASH"]
+        col_x = [80, 440]
+        start_y = 630
+
+        for i, tier_name in enumerate(tiers):
+            count = stats["rarities"].get(tier_name, 0)
+            color = get_tier_color(Tier[tier_name])
+
+            col_index = 0 if i < 4 else 1
+            row_index = i if i < 4 else i - 4
+
+            x_pos = col_x[col_index]
+            y_pos = start_y + (40 * row_index)
+
+            draw.text((x_pos, y_pos), f"{tier_name}:", fill=color, font=self.font_small)
+
+            count_str = f"{count:,}".replace(",", " ")
+            count_width = draw.textlength(count_str, font=self.font_small)
+            draw.text(
+                (x_pos + 220 - count_width, y_pos),
+                count_str,
+                fill=self.TEXT_COLOR,
+                font=self.font_small,
+            )
 
         return img
 
